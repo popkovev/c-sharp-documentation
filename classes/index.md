@@ -542,4 +542,430 @@ global using подключаемое_пространство_имен;
 
 # 10. Модификаторы доступа
 
+- компоненты класса имеют модификаторы доступа
+- задает доступную область видимости для компонентов класса
+- с помощью модификаторов можно скрывать некоторые реализации класса от других частей программы
 
+Виды модификаторов:
+- private
+- private protected
+- protected
+- internal
+- protected internal
+- public
+
+![](images/4.png)
+
+- модификаторы применяются помимо компонентов класса и к компонентам структуры за тем исключением, что структуры не могут использовать модификаторы (private protected, protected, protected internal), поскольку структуры не могут быть унаследованы
+- компоненты класса или структуры по умолчанию модификатор private
+- классы и структуры по умолчанию internal, а вложенные классы и структуры, как и остальные компоненты имеют модификатор private
+
+# 11. Свойства
+
+- свойство - посредник между внешним кодом и какой-то переменной
+- обеспечивают доступ к полям класса и структуры
+- можно получить и установить значение
+
+```csharp
+var person = new Person();
+
+Console.WriteLine(person.Name); // Undefined
+
+person.Name = "Eduard";
+
+Console.WriteLine(person.Name); // Eduard
+
+class Person
+{
+    private string _name = "Undefined";
+
+    public string Name
+    {
+        get => _name;
+        set => _name = value;
+    }
+}
+```
+
+- свойства позволяют по сравнению с обычными полями, вложить дополнительную логику, которая может быть необходима при установке или получении значения
+
+```csharp
+var person = new Person();
+
+Console.WriteLine(person.Name); // Undefined
+
+person.Name = "Test Name";
+
+Console.WriteLine(person.Name); // Undefined
+
+person.Name = "Eduard";
+
+Console.WriteLine(person.Name); // Eduard
+
+class Person
+{
+    private string _name = "Undefined";
+
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            _name = value.Equals("Eduard") ? "Eduard" : "Undefined";
+        }
+    }
+}
+```
+
+- блоки get и set не обязательно должны присутствовать вместе
+
+## 11.1 Вычисляемые свойства
+
+- свойства не обязательно должны быть связаны с какой-то переменной
+
+```csharp
+var person = new Person("Eduard", "Popkov");
+Console.WriteLine(person.FullName); // Eduard Popkov
+
+class Person
+{
+    private string _firstName;
+    private string _lastName;
+
+    public Person(string firstName, string lastName)
+    {
+        _firstName = firstName; 
+        _lastName = lastName;
+    }
+
+    public string FullName => $"{_firstName} {_lastName}";
+}
+```
+
+## 11.2 Модификаторы доступа
+
+- применять модификаторы можно не только ко всему свойству, но и к отдельным блокам
+
+Ограничения:
+- установить модификатор для отдельных блоков можно, если в свойстве присутствует оба блока
+- только один блок может иметь модификатор
+- модификатор блока более ограничивающий, чем модификатор свойства
+
+## 11.3 Автоматические свойства
+
+- сокращенная форма
+- в любой момент времени можно развернуть автосвойства в обычное и добавить дополнительную логику
+- нельзя создавть автосвойство только для записи, по сравнению с обычными
+- автосвойствам можно присвоить значение по умолчанию
+
+```csharp
+public string Name { get; set; }
+
+public string Name { set; } // error
+
+public string Name { get; set; } = "Eduard";
+```
+
+- если оставляем только блок get, то это свойство неявно создается с модификатором readonly (установка значения при объявлении или в конструкторе)
+
+## 11.4 Блок init
+
+- С# 9.0
+- этот блок призван инициализировать свойство
+- установка значения через инициализатор, либо при объявлении, либо в конструкторе
+- после установки значения подобного свойства, его значение изменить нельзя, они становятся readonly (и есть еще способ установки через другое свойство)
+- разница от readonly, что можно установить значение в инициализаторе
+
+```csharp
+var person = new Person() { Name = "Eduard" }; // correct
+
+person.Name = "Eduard"; // error
+
+class Person
+{
+    public string Name { get; init; } = "Eduard"; // correct
+
+    public Person()
+    {
+        Name = "Eduard"; // correct
+    }
+}
+```
+
+# 12. Перегрузка методов
+
+- создание метода с одним и тем же именем но с разной сигнатурой
+
+Сигнатура:
+- имя метода
+- количество параметров
+- типы параметров
+- порядок параметров
+- модификаторы параметров
+
+```csharp
+class Calculator
+{
+    public int Sum(int x, int y) => x + y;
+    public int Sum(int x, int y, int z) => x + y + z;
+}
+```
+
+# 13. Статические члены и модификатор static
+
+- статические поля, свойства, методы относятся ко всему классу/cтруктуре, а не к объекту
+
+## 13.1 Статические поля / свойства
+
+- в самом классе, мы можем использовать такое поле как обычное
+- если обращение к этому поле вне класса, то только с использованием имени класса
+- на уровне памяти, для таких полей будет создаваться участок в памяти, который будет общим для всех объектов класса (для статических переменных создается участок в памяти все равно, даже если не создано ни одного объекта)
+
+```csharp
+var test = new Test();
+test.number = 10; // error
+test.Print();
+
+Console.WriteLine(Test.number); // 10
+
+Test.number = 20;
+
+Console.WriteLine(Test.number); // 20
+
+class Test
+{
+    public static int number = 10;
+
+    public void Print() => Console.WriteLine(number);
+}
+```
+
+## 13.2 Статические методы
+
+- статические методы могут обращаться только к статическим членам класса
+
+## 13.3 Статический конструктор
+
+- без модификатора доступа
+- не принимают параметры
+- внутри нельзя использовать ключевое слово this
+- обращаться только к статическим членам класса
+- их нельзя вызвать в программе вручную. Они выполняются автоматически один раз при первом создании объекта данного класса или при первом обращении к его статическим членам
+- используются для инициализации статических данных, либо же выполняют действия, которые требуется выполнить только один раз
+
+```csharp
+var person = new Person();
+/*
+ * Result: 
+ * 1) static constructor
+ * 2) no-static constructor
+*/
+
+class Person
+{
+    static Person()
+    {
+        Console.WriteLine("Static constructor");
+    }
+
+    public Person()
+    {
+        Console.WriteLine("No-static constructor");
+    }
+}
+```
+
+## 13.4 Статические классы
+
+- объявляются с модификатором static
+- содержат только статические поля, свойства и метода
+
+# 14. Поля и структуры для чтения
+
+- поля для класса или структуры
+- их значение нельзя изменить
+- значение можно установить только при определении переменной или в конструкторе
+
+## 14.1 Сравнение констант
+
+- константы должны быть инициализированы во время компиляции, а readonly во время выполнения программы
+- константы не могут использовать модификатор static, т.к. неявно являются статическим. Readonly - могут быть static, и не быть
+
+## 14.2 Структуры для чтения
+
+- особенность таких структур, что все их поля должны быть readonly
+
+```csharp
+readonly struct Person
+{
+    public readonly string Name = "Eduard";
+
+    public Person()
+    {
+        Name = "Eduard";
+    }
+}
+```
+
+# 15. Null и ссылочные типы
+
+- Microsoft создал такую опцию, чтобы указывать на опасные части кода, где мы можем столкнуться с NullReferenceException.
+- в файле .csproj мы можем отключить такую опцию
+- переменную ссылочного типа следует инициализировать конкретным значением, ей не следует присваивать значение null
+- переменной ссылочного типа можно присвоить значение null, но перед использованием необходимо проверять на null
+
+```csharp
+string? name = null;
+```
+
+## 15.1 nullable-контекст на уровне участка кода
+
+- можно включить nullable-контекст на уровне отдельных участков кода
+
+```csharp
+#nullable enable
+ 
+string? message = null;
+PrintUpper(message);
+
+void PrintUpper(string? message)
+{
+    Console.WriteLine(message.ToUpper()); // указывает на место, где может быть NullReferenceException
+}
+```
+
+## 15.2 Оператор ! (null-forgiving operator)
+
+- убирает предупреждение об ошибке
+- предназначен для статического анализа компилятора
+
+```csharp
+string? message = null;
+PrintUpper(message!);
+
+void PrintUpper(string message)
+{
+    if (message == null)
+    {
+        Console.WriteLine("null");
+        return;
+    }
+
+    Console.WriteLine(message.ToUpper());
+}
+```
+
+## 15.3 Исключение кода из nullable-контекста
+
+- с помощью директивы можно исключить определенный кусок кода из nullable-контекста
+
+```csharp
+#nullable disable
+    string text = null; // здесь nullable-контекст не действует
+#nullable restore
+ 
+string? name = null;   // здесь nullable-контекст снова действует
+```
+
+# 16. Null и значимые типы
+
+- значимые типы не могут иметь значение null
+- чтобы переменная значимого типа могла иметь значение null, надо ее сделать nullable (знак вопроса (?) или Nullable<int>)
+
+```csharp 
+int? number1 = null;
+Nullable<int> number2 = null;
+```
+
+## 16.1 Свойства Value и HasValue и метод GetValueOrDefault
+
+- если попробовать получить значение через свойство Value, которое null, то мы получим ошибку
+- метод GetValueOrDefault - возвращает значение, если оно не равно null или значение по умолчанию
+
+```csharp
+int? number = null;
+
+var result = number.HasValue ? number.Value : 0;
+
+Console.WriteLine(result); // null
+```
+
+## 16.2 Операции с nullable-типами
+
+- nullable-типы поддерживают арифметические операции, но если в операции учавствует nullable-тип, то результатом будет тоже nullable-тип
+
+```csharp
+int? x = 1;
+int y = 1;
+int result1 = x + y; // error
+int? result2 = x + y; // correct
+```
+
+- если один из операндов равен null, то результат тоже null
+- в операциях сравнения, если хоть один из операндов равен null, то возвращается false
+
+```csharp
+int? x = null;
+int y = 1;
+Console.WriteLine(x + y); // null
+```
+
+# 17. Проверка на null, операторы ?. и ??
+
+- ниже приведены проверки на null
+- также провка на тип данных 
+- такие проверки называются null guard
+
+```csharp
+string? message = null;
+string? error = "Not null";
+
+if (message == null) Console.WriteLine("Null");
+if (message is null) Console.WriteLine("Null");
+if (error is not null) Console.WriteLine("Not null");
+if (error is string) Console.WriteLine("string");
+```
+
+## 17.1 Оператор ??
+
+- возвращает левый операнд, если не равен null
+- работает с переменными, которые могут принимать значение null
+
+```csharp
+int? number1 = null;
+int? number2 = 20;
+
+Console.WriteLine(number1 ?? 100); // 100
+Console.WriteLine(number2 ?? 200); // 20
+```
+
+```csharp
+int x = 10;
+int y = 20;
+int result = x ?? y; // error
+```
+
+# 18. Псевдонимы типов и статический импорт
+
+## 18.1 Псевдонимы
+
+- для классов и структур мы можем использовать псевдонимы, потом по ним обращаться к классам и структурам
+
+```csharp 
+using User = Person;
+
+var person = new User();
+
+class Person { }
+```
+
+## 18.2 Статический импорт
+
+- подключает все статические свойства и метода, а также константы
+- после можно не указывать название класса
+
+```csharp
+using static System.Console;
+
+WriteLine("Hello World!!!");
+```
