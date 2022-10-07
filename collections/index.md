@@ -701,3 +701,26 @@ class Number : IEnumerable // наследоваться не обязатель
 
 # 7. Итераторы и оператор yield
 
+- итератор это блок кода, который использует оператор yield для перебора значений
+- yield return - определяет возвращаемый элемент
+- yield break - указывает, что последовательность больше не имеет элементов
+
+```csharp
+Numbers numbers = new Numbers();
+
+foreach (int n in numbers)
+{
+    Console.WriteLine(n);
+}
+ 
+class Numbers
+{
+    public IEnumerator<int> GetEnumerator()
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            yield return i * i;
+        }
+    }
+}
+```

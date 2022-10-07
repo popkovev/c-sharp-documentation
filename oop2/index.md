@@ -307,3 +307,102 @@ namespace ConsoleApp
     }
 }
 ```
+
+# 7. Анонимные типы
+
+- позволяют создать объект с набором свойств без определения класса
+- свойства анонимного типа доступны только для чтения
+- на этапе компиляции, компилятор сам определяет тип для анонима (пример: AnonymousType)
+- для CLR - это ссылочный тип
+- если в программе создаются два анонимных типа с одинаковым набором свойств, то компилятор для них создаст одно определение типа
+- значения можно установить только в инициализаторе
+
+```csharp
+var pupil = new { Name = "Eduard", Age = 23 };
+var student = new { Name = "Eduard", Age = 23 };
+var developer = new { Name = "Emma", Age = 23, Company = "Finteco" };
+
+/// <summary>
+/// <>f__AnonymousType0`2
+/// <> f__AnonymousType0`2
+/// <> f__AnonymousType1`3
+/// </summary>
+
+Console.WriteLine(pupil.GetType().Name);
+Console.WriteLine(student.GetType().Name);
+Console.WriteLine(developer.GetType().Name);
+```
+
+# 8. Кортежи
+
+- способ для работы со значениями
+- кортеж может выступать как результат или параметр метода
+
+```csharp
+var tuple = (1, 2);
+Console.WriteLine(tuple); // (1, 2)
+Console.WriteLine(tuple.Item1); // 1
+Console.WriteLine(tuple.Item2); // 2
+
+(int, string) tuple2 = (23, "Eduard");
+(int, string) tuple3 = (Age: 23, Name: "Eduard");
+
+Console.WriteLine(tuple2);
+Console.WriteLine(tuple3);
+```
+
+- можно применить для обмена значениями
+
+```csharp
+var pupil = "Eduard";
+var student = "Emma";
+
+(pupil, student) = (student, pupil);
+
+Console.WriteLine(pupil + " " + student); // Emma Eduard
+```
+
+# 9. Records
+
+- ссылочный тип
+- неизменяемый тип, но при определенных условиях
+
+Какие условия для неизменяемого типа:
+- блок init в свойстве
+
+```csharp
+public record Person1
+{
+    public string Name { get; set; }
+
+    public Person1(string name)
+    {
+        Name = name;
+    }
+}
+
+public record class Person2 { }
+public record struct Person3 { }
+```
+
+Отличия от классов и структур:
+- сравнение на равенство (на основе значений объекта)
+- оператор with (как и у структур, позволяет создать один record на основе другого)
+- сокращенная запись объявления record
+- реализован метод ToString()
+
+Для сокращенной записи, создается:
+- свойства
+- конструктор
+- деконструктор
+
+```csharp
+var person = new Person("Eduard");
+Console.WriteLine(person.Name);
+
+public record Person(string Name);
+```
+
+Сокращенные структуры в сравнении с классами:
+- свойства будут иметь блоки { get; set; }, а не { get; init; }
+- чтобы нельзя было менять значения сделать readonly структуру
